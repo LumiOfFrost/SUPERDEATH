@@ -1,9 +1,12 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Apos.Shapes;
+using MonoGame.Extended.ViewportAdapters;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace SUPERDEATH.Scripts
 {
@@ -12,12 +15,16 @@ namespace SUPERDEATH.Scripts
 
         //Graphics
 
-        private GraphicsDeviceManager _graphics;
+        public GraphicsDeviceManager _graphics;
+        private ShapeBatch _shapeBatch;
         private SpriteBatch _spriteBatch;
+
+        RenderTarget2D mainRT;
+        RenderTarget2D uiRT;
 
         Matrix worldMatrix = Matrix.CreateTranslation(0, 0, 0);
         public Matrix viewMatrix;
-        Matrix projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45), 800f / 480f, 0.01f, 100f);
+        Matrix projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90), 800f / 480f, 0.01f, 100f);
 
         //Assets
 
@@ -27,18 +34,28 @@ namespace SUPERDEATH.Scripts
 
         public static float gameSpeed = 1;
 
+        public static bool paused = false;
+
         public List<GameObject> gameObjects;
+
+        BoxingViewportAdapter va;
 
         //Player
 
         Player player;
 
+        Camera currentCamera;
+
         public Main()
         {
 
             _graphics = new GraphicsDeviceManager(this);
+            _graphics.PreferredBackBufferWidth = 1280;
+            _graphics.PreferredBackBufferHeight = 720;
+            va = new BoxingViewportAdapter(Window, GraphicsDevice, 1280, 720);
+
             Content.RootDirectory = "Content";
-            IsMouseVisible = true;
+            IsMouseVisible = false;
 
         }
 
@@ -54,11 +71,15 @@ namespace SUPERDEATH.Scripts
         protected override void BeginRun()
         {
 
-            gameObjects.Add(new GameObject(new Transform(new Vector3(0, -1, 0), new Vector3(10, 1, 10), Vector3.Zero), PrimitiveMesh.GetCuboid(GraphicsDevice, new Vector3(0, -1, 0), new Vector3(10, 1, 10), Color.White), RenderType.Primitive, "Solid"));
+            gameObjects.Add(new GameObject(new Transform(new Vector3(0, -1f, 0), new Vector3(10, 1, 10), Vector3.Zero), PrimitiveMesh.GetCuboid(GraphicsDevice, new Vector3(0, -1, 0), new Vector3(10, 1, 10), Color.White), RenderType.Primitive, "Solid"));
 
-            gameObjects.Add(new Player(new Transform(new Vector3(0, 1, 0), new Vector3(0.75f, 1.75f, 0.75f), Vector3.Zero)));
+            gameObjects.Add(new Player(new Transform(new Vector3(0, 1, 0), new Vector3(0.5f, 1.8f, 0.5f), Vector3.Zero), new Vector3(0, 0.75f, 0)));
+
+            gameObjects.Add(new GameObject(new Transform(new Vector3(-9.5f, 2f, 0), new Vector3(5, 6, 10), Vector3.Zero), PrimitiveMesh.GetCuboid(GraphicsDevice, new Vector3(-9.5f, 2f, 0), new Vector3(5, 6, 10), Color.White), RenderType.Primitive, "Solid"));
 
             player = gameObjects.OfType<Player>().First();
+
+            currentCamera = player.camera;
 
             base.BeginRun();
         }
@@ -66,16 +87,47 @@ namespace SUPERDEATH.Scripts
         protected override void LoadContent()
         {
 
+            _shapeBatch = new ShapeBatch(GraphicsDevice, Content);
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-           bEffect = new BasicEffect(GraphicsDevice);
+            mainRT = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+            uiRT = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+
+            bEffect = new BasicEffect(GraphicsDevice);
 
         }
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
+
+            if (InputManager.prevKeyState == null)
+            {
+                InputManager.prevKeyState = Keyboard.GetState();
+            }
+
+            if (InputManager.prevPadState == null)
+            {
+                InputManager.prevPadState = GamePad.GetState(PlayerIndex.One);
+            }
+
+            if (InputManager.Pause())
+            {
+
+                paused = !paused;
+                gameSpeed = paused ? 0 : 1;
+                IsMouseVisible = paused;
+                Mouse.SetPosition(_graphics.GraphicsDevice.Viewport.Width / 2, _graphics.GraphicsDevice.Viewport.Height / 2);
+
+            }
+
+            if (InputManager.Fullscreen())
+            {
+
+                _graphics.ToggleFullScreen();
+
+            }
+
+            viewMatrix = Matrix.CreateLookAt(currentCamera.position, currentCamera.LookAt(), currentCamera.up);
 
             foreach (GameObject g in gameObjects)
             {
@@ -84,7 +136,11 @@ namespace SUPERDEATH.Scripts
 
             }
 
-            viewMatrix = Matrix.CreateLookAt(player.transform.position, player.transform.position + Vector3.Forward, Vector3.Up) * Matrix.CreateFromYawPitchRoll(player.transform.rotation.Y, player.transform.rotation.X, player.transform.rotation.Z);
+            InputManager.prevPadState = GamePad.GetState(PlayerIndex.One);
+
+            InputManager.prevKeyState = Keyboard.GetState();
+
+            gameObjects.Sort((a, b) => a.GetDistance(currentCamera.LookAt()).CompareTo(b.GetDistance(currentCamera.LookAt())));
 
             base.Update(gameTime);
         }
@@ -92,12 +148,26 @@ namespace SUPERDEATH.Scripts
         protected override void Draw(GameTime gameTime)
         {
 
+            GraphicsDevice.SetRenderTarget(uiRT);
+
+            GraphicsDevice.Clear(Color.Transparent);
+
+            _shapeBatch.Begin();
+
+            _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2), 2f, Color.White, Color.White);
+
+            _shapeBatch.End();
+
+            GraphicsDevice.SetRenderTarget(mainRT);
+
             GraphicsDevice.Clear(Color.Black);
+
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
             foreach (GameObject g in gameObjects)
             {
 
-                switch(g.renderType)
+                switch (g.renderType)
                 {
 
                     case RenderType.Model:
@@ -118,9 +188,18 @@ namespace SUPERDEATH.Scripts
                         break;
 
                 }
-                
 
             }
+
+            GraphicsDevice.SetRenderTarget(null);
+
+            _spriteBatch.Begin();
+
+            _spriteBatch.Draw(mainRT, GraphicsDevice.Viewport.Bounds, Color.White);
+
+            _spriteBatch.Draw(uiRT, GraphicsDevice.Viewport.Bounds, Color.White);
+
+            _spriteBatch.End();
 
             base.Draw(gameTime);
         
