@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
@@ -12,6 +12,9 @@ namespace SUPERDEATH.Scripts
         public static bool inputActive = true;
 
         public static float leftDeadzone = 0.15f;
+
+        public static KeyboardState prevKeyState;
+        public static GamePadState prevPadState;
 
         public static bool IsMovingUp()
         {
@@ -82,7 +85,7 @@ namespace SUPERDEATH.Scripts
 
         }
 
-        public static bool Jump(KeyboardState prevKeyState, GamePadState prevPadState)
+        public static bool Jump()
         {
 
             if (
@@ -104,7 +107,53 @@ namespace SUPERDEATH.Scripts
 
         }
 
-        public static bool Fall(KeyboardState prevKeyState, GamePadState prevPadState)
+        public static bool Pause()
+        {
+
+            if (
+                (
+                (Keyboard.GetState().IsKeyDown(Keys.Escape) && !prevKeyState.IsKeyDown(Keys.Escape)) ||
+                (GamePad.GetState(PlayerIndex.One).IsButtonDown(Buttons.Start) && !prevPadState.IsButtonDown(Buttons.Start))) &&
+                inputActive
+                )
+            {
+
+                return true;
+
+            }
+            else
+            {
+
+                return false;
+
+            }
+
+        }
+
+        public static bool Fullscreen()
+        {
+
+            if (
+                (
+                (Keyboard.GetState().IsKeyDown(Keys.F11) && !prevKeyState.IsKeyDown(Keys.F11))
+                ) &&
+                inputActive
+                )
+            {
+
+                return true;
+
+            }
+            else
+            {
+
+                return false;
+
+            }
+
+        }
+
+        public static bool Fall()
         {
 
             if (
