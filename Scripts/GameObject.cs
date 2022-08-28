@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Xna.Framework;
@@ -81,6 +81,13 @@ namespace SUPERDEATH.Scripts
 
             collider = new BoundingBox(transform.position - transform.scale / 2, transform.position + transform.scale / 2);
 
+        }
+
+        public float GetDistance(Vector3 value2)
+        {
+            return (float)Math.Sqrt((transform.GetCenter().X - value2.X) * ((transform.GetCenter().X - value2.X) +
+            ((transform.GetCenter().Y - value2.Y) * ((transform.GetCenter().Y - value2.Y) +
+            ((transform.GetCenter().Z - value2.Z) * ((transform.GetCenter().Z - value2.Z)))))));
         }
 
     }
