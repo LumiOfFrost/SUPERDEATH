@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -95,7 +95,7 @@ namespace SUPERDEATH.Scripts
                     new Tri(0, 2, 3),
                     //Down
                     new Tri(4, 5, 7),
-                    new Tri(7, 6, 5),
+                    new Tri(7, 6, 4),
                     //Front
                     new Tri(6, 7, 3),
                     new Tri(3, 2, 6),
