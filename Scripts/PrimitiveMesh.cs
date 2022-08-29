@@ -14,21 +14,28 @@ namespace SUPERDEATH.Scripts
         public VertexBuffer vertexBuffer;
         public Texture2D texture;
         public Color color;
+        public PrimitiveType primitiveType;
         public Tri[] tris;
 
-        public PrimitiveMesh(GraphicsDevice graphicsDevice, VertexPositionColorNormalTexture[] vertices, Tri[] tr, Color col, Texture2D tex)
+        public PrimitiveMesh(GraphicsDevice graphicsDevice, VertexPositionColorNormalTexture[] vertices, Tri[] tr, Color col, Texture2D tex, PrimitiveType pType)
         {
 
             color = col;
             texture = tex;
             tris = tr;
+            primitiveType = pType;
 
             vertexBuffer = new VertexBuffer(graphicsDevice, typeof(VertexPositionColorNormalTexture), vertices.Length, BufferUsage.WriteOnly);
             vertexBuffer.SetData<VertexPositionColorNormalTexture>(vertices);
 
-            short[] indies = new short[tris.Length * 3];
+            short[] indies;
 
-            for (int i = 0; i < tris.Length; i++)
+            if (tris != null)
+            {
+
+                indies = new short[tris.Length * 3];
+
+                for (int i = 0; i < tris.Length; i++)
             {
 
                 for (int j = 0; j < 3; j++)
@@ -37,6 +44,13 @@ namespace SUPERDEATH.Scripts
                     indies[i * 3 + j] = tris[i].indices[j];
 
                 }
+
+            }
+
+            } else
+            {
+
+                indies = new short[2] { 0, 1 };
 
             }
 
@@ -67,8 +81,36 @@ namespace SUPERDEATH.Scripts
             foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, tris.Length);
+                if (primitiveType != PrimitiveType.LineList)
+                {
+                    graphicsDevice.DrawIndexedPrimitives(primitiveType, 0, 0, tris.Length);
+                } else
+                {
+                    graphicsDevice.DrawIndexedPrimitives(primitiveType, 0, 0, 2);
+                }
+                
             }
+
+        }
+
+        public static PrimitiveMesh GetLine(GraphicsDevice graphicsDevice, Vector3 position, Vector3 position2, Color col)
+        {
+
+            return new PrimitiveMesh
+                (
+
+                graphicsDevice,
+                new VertexPositionColorNormalTexture[2]
+                {
+                    new VertexPositionColorNormalTexture(position, col, MathUtils.NormalizeVector3(position - position2), Vector2.Zero),
+                    new VertexPositionColorNormalTexture(position2, col, MathUtils.NormalizeVector3(position2 - position), Vector2.Zero)
+                },
+                null,
+                col,
+                null,
+                PrimitiveType.LineList
+
+                );
 
         }
 
@@ -91,26 +133,27 @@ namespace SUPERDEATH.Scripts
                 new Tri[12]
                 {
                     //Up
-                    new Tri(3, 1, 0),
-                    new Tri(0, 2, 3),
+                    new Tri(1, 0, 2),
+                    new Tri(2, 3, 1),
                     //Down
-                    new Tri(4, 5, 7),
-                    new Tri(7, 6, 4),
+                    new Tri(6, 4, 5),
+                    new Tri(5, 7, 6),
                     //Front
-                    new Tri(6, 7, 3),
                     new Tri(3, 2, 6),
+                    new Tri(6, 7, 3),
                     //Back
+                    new Tri(5, 0, 1),
                     new Tri(5, 4, 0),
-                    new Tri(0, 1, 5),
                     //Left
-                    new Tri(4, 6, 2),
                     new Tri(2, 0, 4),
+                    new Tri(4, 6, 2),
                     //Right
-                    new Tri(7, 5, 1),
-                    new Tri(1, 3, 7)
+                    new Tri(1, 3, 7),
+                    new Tri(7, 5, 1)
                 },
                 col,
-                tex);
+                tex,
+                PrimitiveType.TriangleList);
 
         }
 

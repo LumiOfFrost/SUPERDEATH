@@ -85,9 +85,9 @@ namespace SUPERDEATH.Scripts
 
         public float GetDistance(Vector3 value2)
         {
-            return (float)Math.Sqrt((transform.GetCenter().X - value2.X) * ((transform.GetCenter().X - value2.X) +
-            ((transform.GetCenter().Y - value2.Y) * ((transform.GetCenter().Y - value2.Y) +
-            ((transform.GetCenter().Z - value2.Z) * ((transform.GetCenter().Z - value2.Z)))))));
+            return (float)Math.Sqrt((value2.X - transform.GetCenter().X) * ((value2.X - transform.GetCenter().X) +
+            (value2.Y - (transform.GetCenter().Y) * ((value2.Y - transform.GetCenter().Y) +
+            ((value2.Z - transform.GetCenter().Z) * ((value2.Z - transform.GetCenter().Z)))))));
         }
 
     }

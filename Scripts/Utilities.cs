@@ -62,6 +62,8 @@ namespace SUPERDEATH.Scripts
 
         }
 
+        
+
     }
 
     public class MathUtils
@@ -84,6 +86,14 @@ namespace SUPERDEATH.Scripts
         {
 
             return new Vector3(Math.Abs(vector.X), Math.Abs(vector.Y), Math.Abs(vector .Z));
+
+        }
+
+        public static Vector3 NormalizeVector3(Vector3 vector)
+        {
+
+            vector.Normalize();
+            return vector;
 
         }
 
