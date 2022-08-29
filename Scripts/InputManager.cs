@@ -16,6 +16,52 @@ namespace SUPERDEATH.Scripts
         public static KeyboardState prevKeyState;
         public static GamePadState prevPadState;
 
+        public static float movementControl = 1;
+
+        public static bool Reset()
+        {
+
+            if (
+                
+                Keyboard.GetState().IsKeyDown(Keys.NumPad0) && !prevKeyState.IsKeyDown(Keys.NumPad0) && inputActive
+               
+                )
+            {
+
+                return true;
+
+            }
+            else
+            {
+
+                return false;
+
+            }
+
+        }
+
+        public static bool Dash()
+        {
+
+            if (
+
+                Keyboard.GetState().IsKeyDown(Keys.LeftShift) && !prevKeyState.IsKeyDown(Keys.LeftShift) && inputActive
+
+                )
+            {
+
+                return true;
+
+            }
+            else
+            {
+
+                return false;
+
+            }
+
+        }
+
         public static bool IsMovingUp()
         {
 

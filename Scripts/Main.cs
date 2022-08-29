@@ -132,6 +132,15 @@ namespace SUPERDEATH.Scripts
 
             }
 
+            if (!IsActive)
+            {
+
+                paused = true;
+                gameSpeed = 0;
+                IsMouseVisible = true;
+
+            }
+
             if (InputManager.Fullscreen())
             {
 
@@ -167,6 +176,31 @@ namespace SUPERDEATH.Scripts
             _shapeBatch.Begin();
 
             _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2), 1f, Color.White, Color.White);
+
+            if (player.dashCount > 0)
+            {
+
+                _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2 - 6), 1f, Color.Aquamarine, Color.Aquamarine);
+
+                _shapeBatch.DrawCircle(new Vector2(20, 20), 9f, Color.Aquamarine, Color.White, 2);
+
+            }
+            if (player.dashCount > 1)
+            {
+
+                _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2 - 5, GraphicsDevice.Viewport.Height / 2 + 4), 1f, Color.Aquamarine, Color.Aquamarine);
+
+                _shapeBatch.DrawCircle(new Vector2(30, 20), 7f, Color.Aquamarine, Color.White, 2);
+
+            }
+            if (player.dashCount > 2)
+            {
+
+                _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2 + 5, GraphicsDevice.Viewport.Height / 2 + 4), 1f, Color.Aquamarine, Color.Aquamarine);
+
+                _shapeBatch.DrawCircle(new Vector2(40, 20), 5f, Color.Aquamarine, Color.White, 2);
+
+            }
 
             _shapeBatch.End();
 
