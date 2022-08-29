@@ -83,11 +83,17 @@ namespace SUPERDEATH.Scripts
 
             gameObjects.Add(new GameObject(new Transform(new Vector3(0, -1f, 0), new Vector3(10, 1, 10), Vector3.Zero), PrimitiveMesh.GetCuboid(GraphicsDevice, new Vector3(0, -1, 0), new Vector3(10, 1, 10), Color.White), RenderType.Primitive, "Solid"));
 
+            gameObjects.Add(new GameObject(new Transform(new Vector3(75, -1f, 0), new Vector3(10, 1, 10), Vector3.Zero), PrimitiveMesh.GetCuboid(GraphicsDevice, new Vector3(75, -1, 0), new Vector3(10, 1, 10), Color.White), RenderType.Primitive, "Solid"));
+
             gameObjects.Add(new Player(new Transform(new Vector3(0, 1, 0), new Vector3(0.5f, 1.8f, 0.5f), Vector3.Zero), new Vector3(0, 0.75f, 0)));
 
             gameObjects.Add(new GameObject(new Transform(new Vector3(-9.5f, 2f, 0), new Vector3(5, 6, 10), Vector3.Zero), PrimitiveMesh.GetCuboid(GraphicsDevice, new Vector3(-9.5f, 2f, 0), new Vector3(5, 6, 10), Color.White), RenderType.Primitive, "Solid"));
 
-            gameObjects.Add(new LineObject(PrimitiveMesh.GetLine(GraphicsDevice, Vector3.Zero, new Vector3(0, 10, 5), Color.Yellow)));
+            gameObjects.Add(new LineObject(PrimitiveMesh.GetLine(GraphicsDevice, new Vector3(5, -1f, 0), new Vector3(70, -1f, 0), Color.Aquamarine)));
+            gameObjects.Add(new LineObject(PrimitiveMesh.GetLine(GraphicsDevice, new Vector3(5, -1f, -1), new Vector3(70, -1f, 1), Color.Aquamarine)));
+            gameObjects.Add(new LineObject(PrimitiveMesh.GetLine(GraphicsDevice, new Vector3(5, -1f, 1), new Vector3(70, -1f, -1), Color.Aquamarine)));
+            gameObjects.Add(new LineObject(PrimitiveMesh.GetLine(GraphicsDevice, new Vector3(5, -1f, -2), new Vector3(70, -1f, 2), Color.Aquamarine)));
+            gameObjects.Add(new LineObject(PrimitiveMesh.GetLine(GraphicsDevice, new Vector3(5, -1f, 2), new Vector3(70, -1f, -2), Color.Aquamarine)));
 
             player = gameObjects.OfType<Player>().First();
 
@@ -132,6 +138,15 @@ namespace SUPERDEATH.Scripts
 
             }
 
+            if (!IsActive)
+            {
+
+                paused = true;
+                gameSpeed = 0;
+                IsMouseVisible = true;
+
+            }
+
             if (InputManager.Fullscreen())
             {
 
@@ -167,6 +182,31 @@ namespace SUPERDEATH.Scripts
             _shapeBatch.Begin();
 
             _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2), 1f, Color.White, Color.White);
+
+            if (player.dashCount > 0)
+            {
+
+                _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2 - 6), 1f, Color.Aquamarine, Color.Aquamarine);
+
+                _shapeBatch.DrawCircle(new Vector2(20, 20), 9f, Color.Aquamarine, Color.White, 2);
+
+            }
+            if (player.dashCount > 1)
+            {
+
+                _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2 - 5, GraphicsDevice.Viewport.Height / 2 + 4), 1f, Color.Aquamarine, Color.Aquamarine);
+
+                _shapeBatch.DrawCircle(new Vector2(30, 20), 7f, Color.Aquamarine, Color.White, 2);
+
+            }
+            if (player.dashCount > 2)
+            {
+
+                _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2 + 5, GraphicsDevice.Viewport.Height / 2 + 4), 1f, Color.Aquamarine, Color.Aquamarine);
+
+                _shapeBatch.DrawCircle(new Vector2(40, 20), 5f, Color.Aquamarine, Color.White, 2);
+
+            }
 
             _shapeBatch.End();
 

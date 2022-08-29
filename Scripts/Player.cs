@@ -19,6 +19,16 @@ namespace SUPERDEATH.Scripts
 
         public Matrix viewToWorld;
 
+        public bool isGrounded = false;
+
+        float coyoteTime = 0f;
+
+        bool dashJumping = false;
+        
+        public int dashCount = 3;
+
+        float jumpBuffer = 0f;
+
         public Camera camera;
 
         Vector3 cameraLocalPosition;
@@ -60,10 +70,33 @@ namespace SUPERDEATH.Scripts
 
             Vector2 mouseMovement = (Mouse.GetState().Position.ToVector2() - new Vector2(main._graphics.GraphicsDevice.Viewport.Width / 2, main._graphics.GraphicsDevice.Viewport.Height / 2)) * Main.gameSpeed;
             
+            if(velocity.Y > 0)
+            {
+
+                isGrounded = false;
+
+            }
+
+            if (coyoteTime < 0 || isGrounded)
+            {
+
+                dashJumping = false;
+
+            }
+
+            if (InputManager.Reset())
+            {
+
+                transform.position = new Vector3(0, 30, 0);
+                velocity = Vector3.Zero;
+
+            }
+
             if (InputManager.IsMovingLeft() && !InputManager.IsMovingRight())
             {
 
                 movementVelocity += -movementVTW.Right * moveSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                
 
             }
             if (InputManager.IsMovingRight() && !InputManager.IsMovingLeft())
@@ -88,7 +121,43 @@ namespace SUPERDEATH.Scripts
             if (InputManager.Jump())
             {
 
-                velocity.Y = 0.35f * Main.gameSpeed;
+                jumpBuffer = 0.15f;
+
+                
+
+            }
+
+            if (isGrounded)
+            {
+
+                coyoteTime = 0.2f;
+
+            }
+
+            if (jumpBuffer > 0 && coyoteTime > 0)
+            {
+
+                velocity.Y = (dashJumping ? 15 : 20) * Main.gameSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                coyoteTime = 0;
+                jumpBuffer = 0;
+                isGrounded = false;
+
+            }
+
+            if (!isGrounded && velocity.X < moveSpeed * 2 && velocity.Z < moveSpeed * 2)
+            {
+
+                InputManager.movementControl = 0.35f;
+
+            } else if (!isGrounded)
+            {
+
+                InputManager.movementControl = 0.15f;
+
+            } else
+            {
+
+                InputManager.movementControl = 1;
 
             }
 
@@ -110,9 +179,36 @@ namespace SUPERDEATH.Scripts
             camera.forward.X = MathHelper.Clamp(camera.forward.X, MathHelper.ToRadians(-75), MathHelper.ToRadians(75));
             camera.forward.Z = MathHelper.Clamp(camera.forward.Z, MathHelper.ToRadians(-75), MathHelper.ToRadians(75));
 
+            if (InputManager.Dash() && dashCount > 0)
+            {
+
+                if (movementVelocity.X != 0 || movementVelocity.Z != 0)
+                {
+
+                    velocity += MathUtils.NormalizeVector3(movementVelocity) * 50 * (float)gameTime.ElapsedGameTime.TotalSeconds * Main.gameSpeed;
+
+                } else
+                {
+
+                    velocity += movementVTW.Forward * 50 * (float)gameTime.ElapsedGameTime.TotalSeconds * Main.gameSpeed;
+
+                }
+
+                dashJumping = true;
+
+                dashCount -= 1;
+
+                coyoteTime = 0.3f;
+
+            }
+
             movementVelocity.Y = velocity.Y;
 
-            velocity = Vector3.Lerp(velocity, movementVelocity, 0.16f) * Main.gameSpeed;
+            velocity = Vector3.Lerp(velocity, movementVelocity, 0.16f * InputManager.movementControl) * Main.gameSpeed;
+
+            jumpBuffer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            coyoteTime -= (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             CheckForCollision(main.gameObjects);
 
@@ -182,6 +278,10 @@ namespace SUPERDEATH.Scripts
                         }
                         else
                         {
+
+                            isGrounded = true;
+
+                            dashCount = 3;
 
                             velocity.Y = 0;
 
