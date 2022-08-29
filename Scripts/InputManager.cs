@@ -18,6 +18,8 @@ namespace SUPERDEATH.Scripts
 
         public static float movementControl = 1;
 
+        public static float sensitivity = 10;
+
         public static bool Reset()
         {
 
@@ -40,12 +42,23 @@ namespace SUPERDEATH.Scripts
 
         }
 
+        public static Vector2 LookVector()
+        {
+
+            Vector2 stick = GamePad.GetState(PlayerIndex.One).ThumbSticks.Right;
+
+            return new Vector2(stick.X, -stick.Y) * sensitivity;
+
+        }
+
         public static bool Dash()
         {
 
             if (
 
-                Keyboard.GetState().IsKeyDown(Keys.LeftShift) && !prevKeyState.IsKeyDown(Keys.LeftShift) && inputActive
+                (Keyboard.GetState().IsKeyDown(Keys.LeftShift) && !prevKeyState.IsKeyDown(Keys.LeftShift)) ||
+                (GamePad.GetState(PlayerIndex.One).IsButtonDown(Buttons.LeftShoulder) && !prevPadState.IsButtonDown(Buttons.LeftShoulder)) &&
+                    inputActive
 
                 )
             {

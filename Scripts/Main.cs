@@ -23,6 +23,8 @@ namespace SUPERDEATH.Scripts
         RenderTarget2D mainRT;
         RenderTarget2D uiRT;
 
+        SpriteFont arial;
+
         Matrix worldMatrix = Matrix.CreateTranslation(0, 0, 0);
         public Matrix viewMatrix;
         Matrix projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(90), 800f / 480f, 0.001f, 300f);
@@ -104,6 +106,8 @@ namespace SUPERDEATH.Scripts
 
         protected override void LoadContent()
         {
+
+            arial = Content.Load<SpriteFont>("Fonts/Arial");
 
             _shapeBatch = new ShapeBatch(GraphicsDevice, Content);
             _spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -215,6 +219,35 @@ namespace SUPERDEATH.Scripts
             GraphicsDevice.SetRenderTarget(mainRT);
 
             GraphicsDevice.Clear(Color.Black);
+
+            BasicEffect basicEffect = new BasicEffect(GraphicsDevice)
+            {
+
+                TextureEnabled = true,
+                VertexColorEnabled = true
+
+            };
+
+            Viewport viewport = GraphicsDevice.Viewport;
+
+            Vector3 textPosition = new Vector3(6, 5, 0);
+
+            basicEffect.World = Matrix.CreateConstrainedBillboard(textPosition, textPosition - currentCamera.forward, Vector3.Down, null, null);
+            basicEffect.View = viewMatrix;
+            basicEffect.Projection = projectionMatrix;
+
+            const string message = "WASD or LEFT STICK to move\r\nSPACE or A BUTTON to jump\r\nSHIFT or LEFT BUMPER to dash\r\nJUMP out of a DASH for extra height";
+            Vector2 textOrigin = arial.MeasureString(message) / 2;
+            const float textSize = 0.05f;
+
+            _spriteBatch.Begin(0, null, null, null, RasterizerState.CullNone, basicEffect);
+
+            _spriteBatch.DrawString(arial, message, Vector2.Zero, Color.Yellow, 0, textOrigin, textSize, 0, 0);
+
+            _spriteBatch.End();
+
+            GraphicsDevice.BlendState = BlendState.AlphaBlend;
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
             foreach (GameObject g in gameObjects)
             {

@@ -75,6 +75,12 @@ namespace SUPERDEATH.Scripts
             {
 
                 basicEffect.Texture = texture;
+                basicEffect.TextureEnabled = true;
+
+            } else
+            {
+
+                basicEffect.TextureEnabled = false;
 
             }
 

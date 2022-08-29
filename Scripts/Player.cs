@@ -171,6 +171,11 @@ namespace SUPERDEATH.Scripts
             mouseMovement.Y *= main.GraphicsDevice.Viewport.Height / 800.0f;
             mouseMovement.X *= main.GraphicsDevice.Viewport.Width / 1280.0f;
 
+            if (InputManager.LookVector() != Vector2.Zero)
+            {
+                mouseMovement = InputManager.LookVector();
+            }
+
             camera.forward += mouseMovement.X * mouseSpeed * normal;
 
             camera.forward -= mouseMovement.Y * mouseSpeed * camera.up;
