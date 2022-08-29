@@ -20,3 +20,15 @@
 /processorParam:TextureFormat=Compressed
 /build:Fonts/Arial.spritefont
 
+#begin Sounds/Dash.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/Dash.wav
+
+#begin Sounds/Jump.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Sounds/Jump.wav
+

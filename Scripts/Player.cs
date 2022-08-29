@@ -140,6 +140,7 @@ namespace SUPERDEATH.Scripts
                 velocity.Y = (dashJumping ? 15 : 20) * Main.gameSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 coyoteTime = 0;
                 jumpBuffer = 0;
+                AssetManager.jumpSound.Play(0.25f, 0, 0);
                 isGrounded = false;
 
             }
@@ -200,6 +201,8 @@ namespace SUPERDEATH.Scripts
                 }
 
                 dashJumping = true;
+
+                AssetManager.dashSound.Play(0.25f, 0, 0);
 
                 dashCount -= 1;
 

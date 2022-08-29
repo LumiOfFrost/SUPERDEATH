@@ -8,6 +8,7 @@ using Apos.Shapes;
 using MonoGame.Extended.ViewportAdapters;
 using static System.Formats.Asn1.AsnWriter;
 using System;
+using Microsoft.Xna.Framework.Audio;
 
 namespace SUPERDEATH.Scripts
 {
@@ -22,8 +23,6 @@ namespace SUPERDEATH.Scripts
 
         RenderTarget2D mainRT;
         RenderTarget2D uiRT;
-
-        SpriteFont arial;
 
         Matrix worldMatrix = Matrix.CreateTranslation(0, 0, 0);
         public Matrix viewMatrix;
@@ -107,7 +106,7 @@ namespace SUPERDEATH.Scripts
         protected override void LoadContent()
         {
 
-            arial = Content.Load<SpriteFont>("Fonts/Arial");
+            AssetManager.Load(Content);
 
             _shapeBatch = new ShapeBatch(GraphicsDevice, Content);
             _spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -189,18 +188,17 @@ namespace SUPERDEATH.Scripts
 
             if (player.dashCount > 0)
             {
-
                 _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2 - 6), 1f, Color.Aquamarine, Color.Aquamarine);
-
-                _shapeBatch.DrawCircle(new Vector2(20, 20), 9f, Color.Aquamarine, Color.White, 2);
-
             }
+
+            _shapeBatch.DrawCircle(new Vector2(20, 20), 15f, player.dashCount > 0 ? player.dashCount > 2 ? Color.Aquamarine : player.dashCount > 1 ? Color.MediumAquamarine : Color.DarkSlateGray : new Color(0.1f, 0.1f, 0.1f), Color.White, 2);
+
             if (player.dashCount > 1)
             {
 
                 _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2 - 5, GraphicsDevice.Viewport.Height / 2 + 4), 1f, Color.Aquamarine, Color.Aquamarine);
 
-                _shapeBatch.DrawCircle(new Vector2(30, 20), 7f, Color.Aquamarine, Color.White, 2);
+                _shapeBatch.DrawCircle(new Vector2(20, 20), 10f, player.dashCount > 2 ? Color.Aquamarine : player.dashCount > 1 ? Color.MediumAquamarine : Color.DarkSlateGray, Color.White, 2);
 
             }
             if (player.dashCount > 2)
@@ -208,7 +206,7 @@ namespace SUPERDEATH.Scripts
 
                 _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2 + 5, GraphicsDevice.Viewport.Height / 2 + 4), 1f, Color.Aquamarine, Color.Aquamarine);
 
-                _shapeBatch.DrawCircle(new Vector2(40, 20), 5f, Color.Aquamarine, Color.White, 2);
+                _shapeBatch.DrawCircle(new Vector2(20, 20), 5f, player.dashCount > 2 ? Color.Aquamarine : player.dashCount > 1 ? Color.MediumAquamarine : Color.DarkSlateGray, Color.White, 2);
 
             }
 
@@ -236,13 +234,13 @@ namespace SUPERDEATH.Scripts
             basicEffect.View = viewMatrix;
             basicEffect.Projection = projectionMatrix;
 
-            const string message = "WASD or LEFT STICK to move\r\nSPACE or A BUTTON to jump\r\nSHIFT or LEFT BUMPER to dash\r\nJUMP out of a DASH for extra height";
-            Vector2 textOrigin = arial.MeasureString(message) / 2;
+            const string message = "WASD or LEFT STICK to move\r\nSPACE or A BUTTON to jump\r\nSHIFT or LEFT BUMPER to dash\r\nJUMP out of a DASH for extra height\r\nNumpad 0 to reset position";
+            Vector2 textOrigin = AssetManager.arial.MeasureString(message) / 2;
             const float textSize = 0.05f;
 
             _spriteBatch.Begin(0, null, null, null, RasterizerState.CullNone, basicEffect);
 
-            _spriteBatch.DrawString(arial, message, Vector2.Zero, Color.Yellow, 0, textOrigin, textSize, 0, 0);
+            _spriteBatch.DrawString(AssetManager.arial, message, Vector2.Zero, Color.Yellow, 0, textOrigin, textSize, 0, 0);
 
             _spriteBatch.End();
 
