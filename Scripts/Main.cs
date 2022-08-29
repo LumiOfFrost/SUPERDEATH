@@ -236,7 +236,7 @@ namespace SUPERDEATH.Scripts
             basicEffect.View = viewMatrix;
             basicEffect.Projection = projectionMatrix;
 
-            const string message = "WASD or LEFT STICK to move\r\nSPACE or A BUTTON to jump\r\nSHIFT or LEFT BUMPER to dash\r\nJUMP out of a DASH for extra height";
+            const string message = "WASD or LEFT STICK to move\r\nSPACE or A BUTTON to jump\r\nSHIFT or LEFT BUMPER to dash\r\nJUMP out of a DASH for extra height\r\nNumpad 0 to reset position";
             Vector2 textOrigin = arial.MeasureString(message) / 2;
             const float textSize = 0.05f;
 
