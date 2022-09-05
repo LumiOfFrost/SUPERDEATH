@@ -25,7 +25,9 @@ namespace SUPERDEATH.Scripts
 
         bool dashJumping = false;
         
-        public int dashCount = 3;
+        public float stamina = 3f;
+
+        public float staminaCooldown = 0f;
 
         float jumpBuffer = 0f;
 
@@ -33,14 +35,14 @@ namespace SUPERDEATH.Scripts
 
         Vector3 cameraLocalPosition;
 
-        public Player(Transform tform, Vector3 relativeCameraPos) : base(tform, null, RenderType.None, "Player", false)
+        public Player(Transform tform, Vector3 relativeCameraPos) : base(tform, null, null, RenderType.None, "Player", false)
         {
 
             transform = tform;
 
             cameraLocalPosition = relativeCameraPos;
 
-            camera = new Camera(Vector3.Forward, Vector3.Up, new Vector3(transform.position.X + relativeCameraPos.X, transform.position.Y - transform.scale.Y / 2 + relativeCameraPos.Y, transform.position.Z + relativeCameraPos.Z));
+            camera = new Camera(Vector3.Forward, Vector3.Up, new Vector3(transform.position.X + relativeCameraPos.X, transform.position.Y + relativeCameraPos.Y, transform.position.Z + relativeCameraPos.Z));
 
             model = null;
 
@@ -140,7 +142,7 @@ namespace SUPERDEATH.Scripts
                 velocity.Y = (dashJumping ? 15 : 20) * Main.gameSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 coyoteTime = 0;
                 jumpBuffer = 0;
-                AssetManager.jumpSound.Play(0.25f, 0, 0);
+                Assets.jumpSound.Play(0.25f, 0, 0);
                 isGrounded = false;
 
             }
@@ -185,7 +187,7 @@ namespace SUPERDEATH.Scripts
             camera.forward.X = MathHelper.Clamp(camera.forward.X, MathHelper.ToRadians(-75), MathHelper.ToRadians(75));
             camera.forward.Z = MathHelper.Clamp(camera.forward.Z, MathHelper.ToRadians(-75), MathHelper.ToRadians(75));
 
-            if (InputManager.Dash() && dashCount > 0)
+            if (InputManager.Dash() && stamina >= 1.5f)
             {
 
                 if (movementVelocity.X != 0 || movementVelocity.Z != 0)
@@ -200,25 +202,31 @@ namespace SUPERDEATH.Scripts
 
                 }
 
-                dashJumping = true;
+                velocity.Y = 5 * (float)gameTime.ElapsedGameTime.TotalSeconds * Main.gameSpeed;
 
-                AssetManager.dashSound.Play(0.25f, 0, 0);
+                Assets.dashSound.Play(0.25f, 0, 0);
 
-                dashCount -= 1;
+                stamina -= 1.5f;
 
-                coyoteTime = 0.3f;
+                staminaCooldown = 1;
 
             }
 
             movementVelocity.Y = velocity.Y;
 
-            velocity = Vector3.Lerp(velocity, movementVelocity, 0.16f * InputManager.movementControl) * Main.gameSpeed;
+            velocity = Vector3.Lerp(velocity, movementVelocity, 0.16f * InputManager.movementControl * Main.gameSpeed) * Main.gameSpeed;
 
-            jumpBuffer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+            jumpBuffer -= (float)gameTime.ElapsedGameTime.TotalSeconds * Main.gameSpeed;
 
-            coyoteTime -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+            coyoteTime -= (float)gameTime.ElapsedGameTime.TotalSeconds * Main.gameSpeed;
 
-            CheckForCollision(main.gameObjects);
+            staminaCooldown -= (float)gameTime.ElapsedGameTime.TotalSeconds * Main.gameSpeed;
+
+            if(staminaCooldown <= 0) stamina += (float)gameTime.ElapsedGameTime.TotalSeconds * 1.5f * Main.gameSpeed;
+
+            stamina = Math.Clamp(stamina, 0, 3);
+
+            CheckForCollision(LevelManager.currentLevel.gameObjects);
 
             if (main.IsActive && !Main.paused)
             {
@@ -226,8 +234,6 @@ namespace SUPERDEATH.Scripts
                 Mouse.SetPosition(main._graphics.GraphicsDevice.Viewport.Width / 2, main._graphics.GraphicsDevice.Viewport.Height / 2);
 
             }
-
-            base.Update(main, gameTime);
         
         }
 
@@ -241,7 +247,7 @@ namespace SUPERDEATH.Scripts
             foreach (GameObject other in gameObjects)
             {
 
-                if (collider.Intersects(other.collider) && other != this)
+                if (collider.Intersects(other.collider) && other != this && other.solid)
                 {
 
                     Vector3 depth = ColliderUtils.GetIntersectionDepth(collider, other.collider);
@@ -268,7 +274,7 @@ namespace SUPERDEATH.Scripts
             foreach (GameObject other in gameObjects)
             {
 
-                if (collider.Intersects(other.collider) && other != this)
+                if (collider.Intersects(other.collider) && other != this && other.solid)
                 {
 
                     Vector3 depth = ColliderUtils.GetIntersectionDepth(collider, other.collider);
@@ -289,7 +295,7 @@ namespace SUPERDEATH.Scripts
 
                             isGrounded = true;
 
-                            dashCount = 3;
+                            staminaCooldown = 0;
 
                             velocity.Y = 0;
 
@@ -310,7 +316,7 @@ namespace SUPERDEATH.Scripts
             foreach (GameObject other in gameObjects)
             {
 
-                if (collider.Intersects(other.collider) && other != this)
+                if (collider.Intersects(other.collider) && other != this && other.solid)
                 {
 
                     Vector3 depth = ColliderUtils.GetIntersectionDepth(collider, other.collider);
@@ -329,6 +335,8 @@ namespace SUPERDEATH.Scripts
                 }
 
             }
+
+            Debug.WriteLine(transform.position.ToString());
 
         }
 

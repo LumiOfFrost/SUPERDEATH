@@ -4,11 +4,12 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Apos.Shapes;
+using MonoGame.Extended;
 using MonoGame.Extended.ViewportAdapters;
 using static System.Formats.Asn1.AsnWriter;
 using System;
 using Microsoft.Xna.Framework.Audio;
+using MonoGame.Extended.Shapes;
 
 namespace SUPERDEATH.Scripts
 {
@@ -18,11 +19,15 @@ namespace SUPERDEATH.Scripts
         //Graphics
 
         public GraphicsDeviceManager _graphics;
-        private ShapeBatch _shapeBatch;
         private SpriteBatch _spriteBatch;
 
         RenderTarget2D mainRT;
         RenderTarget2D uiRT;
+        RenderTarget2D staminaRT;
+        RenderTarget2D staminaMask;
+
+        DepthStencilState s1;
+        DepthStencilState s2;
 
         Matrix worldMatrix = Matrix.CreateTranslation(0, 0, 0);
         public Matrix viewMatrix;
@@ -37,8 +42,6 @@ namespace SUPERDEATH.Scripts
         public static float gameSpeed = 1;
 
         public static bool paused = false;
-
-        public List<GameObject> gameObjects;
 
         BoxingViewportAdapter va;
 
@@ -73,8 +76,6 @@ namespace SUPERDEATH.Scripts
         protected override void Initialize()
         {
 
-            gameObjects = new List<GameObject>();
-
             base.Initialize();
         
         }
@@ -82,37 +83,36 @@ namespace SUPERDEATH.Scripts
         protected override void BeginRun()
         {
 
-            gameObjects.Add(new GameObject(new Transform(new Vector3(0, -1f, 0), new Vector3(10, 1, 10), Vector3.Zero), PrimitiveMesh.GetCuboid(GraphicsDevice, new Vector3(0, -1, 0), new Vector3(10, 1, 10), Color.White), RenderType.Primitive, "Solid"));
-
-            gameObjects.Add(new GameObject(new Transform(new Vector3(75, -1f, 0), new Vector3(10, 1, 10), Vector3.Zero), PrimitiveMesh.GetCuboid(GraphicsDevice, new Vector3(75, -1, 0), new Vector3(10, 1, 10), Color.White), RenderType.Primitive, "Solid"));
-
-            gameObjects.Add(new Player(new Transform(new Vector3(0, 1, 0), new Vector3(0.5f, 1.8f, 0.5f), Vector3.Zero), new Vector3(0, 0.75f, 0)));
-
-            gameObjects.Add(new GameObject(new Transform(new Vector3(-9.5f, 2f, 0), new Vector3(5, 6, 10), Vector3.Zero), PrimitiveMesh.GetCuboid(GraphicsDevice, new Vector3(-9.5f, 2f, 0), new Vector3(5, 6, 10), Color.White), RenderType.Primitive, "Solid"));
-
-            gameObjects.Add(new LineObject(PrimitiveMesh.GetLine(GraphicsDevice, new Vector3(5, -1f, 0), new Vector3(70, -1f, 0), Color.Aquamarine)));
-            gameObjects.Add(new LineObject(PrimitiveMesh.GetLine(GraphicsDevice, new Vector3(5, -1f, -1), new Vector3(70, -1f, 1), Color.Aquamarine)));
-            gameObjects.Add(new LineObject(PrimitiveMesh.GetLine(GraphicsDevice, new Vector3(5, -1f, 1), new Vector3(70, -1f, -1), Color.Aquamarine)));
-            gameObjects.Add(new LineObject(PrimitiveMesh.GetLine(GraphicsDevice, new Vector3(5, -1f, -2), new Vector3(70, -1f, 2), Color.Aquamarine)));
-            gameObjects.Add(new LineObject(PrimitiveMesh.GetLine(GraphicsDevice, new Vector3(5, -1f, 2), new Vector3(70, -1f, -2), Color.Aquamarine)));
-
-            player = gameObjects.OfType<Player>().First();
+            LevelManager.Load("levelTest.json");
+            LevelManager.currentLevel.gameObjects.Add(new Player(new Transform(new Vector3(0,3,0), new Vector3(0.75f, 1.75f, 0.75f), Vector3.Zero), new Vector3(0, 1.66f, 0)));
+            player = LevelManager.currentLevel.gameObjects.OfType<Player>().First();
 
             currentCamera = player.camera;
 
+            foreach (GameObject g in LevelManager.currentLevel.gameObjects)
+            {
+
+                g.Init();
+
+            }
+
             base.BeginRun();
+
         }
 
         protected override void LoadContent()
         {
 
-            AssetManager.Load(Content);
+            Assets.Load(Content);
 
-            _shapeBatch = new ShapeBatch(GraphicsDevice, Content);
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             mainRT = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width / 3, GraphicsDevice.Viewport.Height / 3, true, SurfaceFormat.Color, DepthFormat.Depth24, 0, RenderTargetUsage.DiscardContents);
             uiRT = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width / 3, GraphicsDevice.Viewport.Height / 3, true, SurfaceFormat.Color, DepthFormat.Depth24, 0, RenderTargetUsage.DiscardContents);
+
+            staminaRT = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width / 3, GraphicsDevice.Viewport.Height / 3, true, SurfaceFormat.Color, DepthFormat.Depth24, 0, RenderTargetUsage.DiscardContents);
+
+            staminaMask = new RenderTarget2D(GraphicsDevice, GraphicsDevice.Viewport.Width / 3, GraphicsDevice.Viewport.Height / 3, true, SurfaceFormat.Color, DepthFormat.Depth24, 0, RenderTargetUsage.DiscardContents);
 
             bEffect = new BasicEffect(GraphicsDevice);
 
@@ -159,7 +159,7 @@ namespace SUPERDEATH.Scripts
 
             viewMatrix = Matrix.CreateLookAt(currentCamera.position, currentCamera.LookAt(), currentCamera.up);
 
-            foreach (GameObject g in gameObjects)
+            foreach (GameObject g in LevelManager.currentLevel.gameObjects)
             {
 
                 g.Update(this, gameTime);
@@ -170,7 +170,7 @@ namespace SUPERDEATH.Scripts
 
             InputManager.prevKeyState = Keyboard.GetState();
 
-            gameObjects.Sort((a, b) => a.GetDistance(currentCamera.position).CompareTo(b.GetDistance(currentCamera.position)));
+            LevelManager.currentLevel.gameObjects.Sort((a, b) => a.GetDistance(currentCamera.position).CompareTo(b.GetDistance(currentCamera.position)));
 
             base.Update(gameTime);
         }
@@ -182,35 +182,21 @@ namespace SUPERDEATH.Scripts
 
             GraphicsDevice.Clear(Color.Transparent);
 
-            _shapeBatch.Begin();
+            _spriteBatch.Begin();
 
-            _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2), 1f, Color.White, Color.White);
+            _spriteBatch.DrawCircle(new CircleF(new Point2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2), 1), 8, Color.White, 1);
 
-            if (player.dashCount > 0)
-            {
-                _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2 - 6), 1f, Color.Aquamarine, Color.Aquamarine);
-            }
+            _spriteBatch.End();
 
-            _shapeBatch.DrawCircle(new Vector2(20, 20), 15f, player.dashCount > 0 ? player.dashCount > 2 ? Color.Aquamarine : player.dashCount > 1 ? Color.MediumAquamarine : Color.DarkSlateGray : new Color(0.1f, 0.1f, 0.1f), Color.White, 2);
+            GraphicsDevice.SetRenderTarget(staminaRT);
 
-            if (player.dashCount > 1)
-            {
+            GraphicsDevice.Clear(Color.Transparent);
 
-                _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2 - 5, GraphicsDevice.Viewport.Height / 2 + 4), 1f, Color.Aquamarine, Color.Aquamarine);
+            _spriteBatch.Begin(samplerState:SamplerState.PointClamp);
 
-                _shapeBatch.DrawCircle(new Vector2(20, 20), 10f, player.dashCount > 2 ? Color.Aquamarine : player.dashCount > 1 ? Color.MediumAquamarine : Color.DarkSlateGray, Color.White, 2);
+            _spriteBatch.FillRectangle(new Vector2(5, GraphicsDevice.Viewport.Height - 15), new Size2(105 * player.stamina / 3, 10), Color.Aquamarine);
 
-            }
-            if (player.dashCount > 2)
-            {
-
-                _shapeBatch.DrawCircle(new Vector2(GraphicsDevice.Viewport.Width / 2 + 5, GraphicsDevice.Viewport.Height / 2 + 4), 1f, Color.Aquamarine, Color.Aquamarine);
-
-                _shapeBatch.DrawCircle(new Vector2(20, 20), 5f, player.dashCount > 2 ? Color.Aquamarine : player.dashCount > 1 ? Color.MediumAquamarine : Color.DarkSlateGray, Color.White, 2);
-
-            }
-
-            _shapeBatch.End();
+            _spriteBatch.End();
 
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
@@ -235,36 +221,29 @@ namespace SUPERDEATH.Scripts
             basicEffect.Projection = projectionMatrix;
 
             const string message = "WASD or LEFT STICK to move\r\nSPACE or A BUTTON to jump\r\nSHIFT or LEFT BUMPER to dash\r\nJUMP out of a DASH for extra height\r\nNumpad 0 to reset position";
-            Vector2 textOrigin = AssetManager.arial.MeasureString(message) / 2;
+            Vector2 textOrigin = Assets.arialFont.MeasureString(message) / 2;
             const float textSize = 0.05f;
 
-            _spriteBatch.Begin(0, null, null, null, RasterizerState.CullNone, basicEffect);
+            _spriteBatch.Begin(0, null, SamplerState.PointClamp, null, RasterizerState.CullNone, basicEffect);
 
-            _spriteBatch.DrawString(AssetManager.arial, message, Vector2.Zero, Color.Yellow, 0, textOrigin, textSize, 0, 0);
+            _spriteBatch.DrawString(Assets.arialFont, message, Vector2.Zero, Color.Yellow, 0, textOrigin, textSize, 0, 0);
 
             _spriteBatch.End();
 
+            GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
             GraphicsDevice.BlendState = BlendState.AlphaBlend;
             GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-            foreach (GameObject g in gameObjects)
+            foreach (GameObject g in LevelManager.currentLevel.gameObjects)
             {
 
                 switch (g.renderType)
                 {
 
                     case RenderType.Model:
-                        DrawModel(g.model, Matrix.CreateTranslation(g.transform.position) * Matrix.CreateScale(g.transform.scale.X, g.transform.scale.Y, g.transform.scale.Z), viewMatrix, projectionMatrix);
+                        DrawModel(g.texture == "untextured" ? new Texture2D(GraphicsDevice, 1, 1) : Assets.GetTextureFromName(g.texture), Assets.GetModelFromName(g.model), worldMatrix * Matrix.CreateTranslation(g.transform.position) * Matrix.CreateScale(g.transform.scale.X / 2f, g.transform.scale.Y / 2f, g.transform.scale.Z / 2f) * Matrix.CreateFromYawPitchRoll(g.transform.rotation.Y, g.transform.rotation.X, g.transform.rotation.Z), viewMatrix, projectionMatrix);
                         break;
                     case RenderType.None:
-                        break;
-                    case RenderType.Primitive:
-                        bEffect.VertexColorEnabled = true;
-                        bEffect.AmbientLightColor = new Vector3(0.5f, 0.5f, 0.5f);
-                        bEffect.World = worldMatrix;
-                        bEffect.View = viewMatrix;
-                        bEffect.Projection = projectionMatrix;
-                        g.mesh.Draw(GraphicsDevice, bEffect);
                         break;
                     default:
                         Debug.WriteLine("Error! No RenderType found!");
@@ -282,13 +261,15 @@ namespace SUPERDEATH.Scripts
 
             _spriteBatch.Draw(uiRT, GraphicsDevice.Viewport.Bounds, Color.White);
 
+            _spriteBatch.Draw(staminaRT, GraphicsDevice.Viewport.Bounds, Color.White);
+
             _spriteBatch.End();
 
             base.Draw(gameTime);
         
         }
 
-        private void DrawModel(Model model, Matrix world, Matrix view, Matrix projection)
+        private void DrawModel(Texture2D texture, Model model, Matrix world, Matrix view, Matrix projection)
         {
 
             if (model != null)
@@ -298,6 +279,7 @@ namespace SUPERDEATH.Scripts
                     foreach (BasicEffect effect in mesh.Effects)
                     {
                         effect.EnableDefaultLighting();
+                        effect.Texture = texture;
                         effect.World = world;
                         effect.View = view;
                         effect.Projection = projection;

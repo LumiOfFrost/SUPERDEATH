@@ -12,15 +12,12 @@ namespace SUPERDEATH.Scripts
     {
 
         Model,
-        Primitive,
         None
 
     }
 
     public class GameObject
     {
-
-        public RenderType renderType;
 
         public virtual void Update(Main main, GameTime gameTime)
         {
@@ -29,16 +26,16 @@ namespace SUPERDEATH.Scripts
 
         public virtual void Init()
         {
-
+            collider = new BoundingBox(transform.position - transform.scale / 2, transform.position + transform.scale / 2);
         }
+
+        public RenderType renderType;
 
         public string tag;
 
         public Transform transform;
 
-        public Model model;
-
-        public PrimitiveMesh mesh;
+        public string model;
 
         public BoundingBox collider;
 
@@ -46,40 +43,33 @@ namespace SUPERDEATH.Scripts
 
         public bool solid;
 
-        public GameObject(Transform tform, Model mdl, RenderType rType, bool usesModel, string tg = "", bool isSolid = true)
+        public string texture;
+
+        public GameObject(Transform tform, string modelName, string textureName, RenderType rType, string tg = "", bool isSolid = true)
         {
+
+            renderType = rType;
 
             tag = tg;
 
-            model = mdl;
+            model = modelName;
+
+            this.texture = textureName;
 
             transform = tform;
 
             velocity = Vector3.Zero;
-
-            renderType = rType;
 
             solid = isSolid;
 
             collider = new BoundingBox(transform.position - transform.scale / 2, transform.position + transform.scale / 2);
 
         }
-        public GameObject(Transform tform, PrimitiveMesh pMesh, RenderType rType, string tg = "", bool isSolid = true)
+
+        public GameObject()
         {
 
-            tag = tg;
 
-            mesh = pMesh;
-
-            transform = tform;
-
-            velocity = Vector3.Zero;
-
-            renderType = rType;
-
-            solid = isSolid;
-
-            collider = new BoundingBox(transform.position - transform.scale / 2, transform.position + transform.scale / 2);
 
         }
 

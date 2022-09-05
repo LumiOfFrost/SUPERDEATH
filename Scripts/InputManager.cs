@@ -6,7 +6,7 @@ using System.Text;
 
 namespace SUPERDEATH.Scripts
 {
-    public class InputManager
+    public static class InputManager
     {
 
         public static bool inputActive = true;
